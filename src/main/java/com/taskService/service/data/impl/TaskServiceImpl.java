@@ -1,6 +1,7 @@
 package com.taskService.service.data.impl;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocumentList;
@@ -47,6 +48,16 @@ public class TaskServiceImpl implements TaskService{
 	@Override
 	public SolrDocumentList getAllTasks(String auth_key) throws SolrServerException, IOException {
 		return solrservice.getAllTasks(dataservice.getUserEmail(auth_key));
+	}
+
+	@Override
+	public SolrDocumentList createdTasks(String email) throws SolrServerException, IOException {
+		return solrservice.createdTasks(email);
+	}
+
+	@Override
+	public SolrDocumentList completedTasks(String email) throws SolrServerException, IOException {
+		return solrservice.completedTasks(email);
 	}
 
 }

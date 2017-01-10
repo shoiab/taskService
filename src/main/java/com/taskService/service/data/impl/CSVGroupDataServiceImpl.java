@@ -1,6 +1,7 @@
 package com.taskService.service.data.impl;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.solr.client.solrj.SolrServerException;
@@ -26,8 +27,10 @@ public class CSVGroupDataServiceImpl implements CSVGroupDataService{
 
 	@Override
 	public HttpStatus createGroup(String emails, String groupName) throws SolrServerException, IOException {
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd kk:mm:ss");
+		String currentDate = simpleDateFormat.format(new Date());
 		GroupModel groupmodel = new GroupModel();
-		groupmodel.setDateOfCreation(new Date());
+		groupmodel.setDateOfCreation(currentDate);
 		groupmodel.setGroupName(groupName);
 		groupmodel.setGroupMailList(emails);
 		JSONObject groupobj = dbservice.createGroup(groupmodel);

@@ -1,14 +1,12 @@
 package com.taskService.model;
 
-import java.util.Date;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class GroupModel {
 	
 	private String groupName;
 	private String GroupMailList;
-	private Date dateOfCreation;
+	private String dateOfCreation;
 	public String getGroupName() {
 		return groupName;
 	}
@@ -23,12 +21,12 @@ public class GroupModel {
 	}
 	
 	@JsonIgnore
-	public Date getDateOfCreation() {
+	public String getDateOfCreation() {
 		return dateOfCreation;
 	}
 	
 	@JsonIgnore
-	public void setDateOfCreation(Date dateOfCreation) {
+	public void setDateOfCreation(String dateOfCreation) {
 		this.dateOfCreation = dateOfCreation;
 	}
 

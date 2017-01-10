@@ -1,6 +1,7 @@
 package com.taskService.solr;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocumentList;
@@ -22,5 +23,9 @@ public interface SearchHandler {
 	void createTask(TaskModel taskModel) throws SolrServerException, IOException;
 
 	SolrDocumentList getAllTasks(String userEmail) throws SolrServerException, IOException;
+
+	SolrDocumentList createdTasks(String email) throws SolrServerException, IOException;
+
+	SolrDocumentList completedTasks(String email) throws SolrServerException, IOException;
 
 }

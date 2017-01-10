@@ -150,6 +150,12 @@ public class SearchManagerImpl implements SearchHandler {
 		tagdoc.addField("taskDescription", taskModel.getDescription());
 		tagdoc.addField(Constants.TAG_TYPE_ID, taskModel.getTaskid());
 		tagdoc.addField("taskCreator", taskModel.getTaskCreator());
+		tagdoc.addField("taskCreationDate", taskModel.getTaskCreationDate());
+		tagdoc.addField("dateOfStart", taskModel.getDateOfStart());
+		tagdoc.addField("dateOfCompletion", taskModel.getDateOfCompletion());
+		tagdoc.addField("statusOfCompletion", taskModel.getStatusOfCompletion());
+		tagdoc.addField("priority", taskModel.getPriority());
+		tagdoc.addField("notificationTime", taskModel.getNotificationTime());
 
 		server.add(tagdoc);
 		server.commit();
@@ -165,6 +171,44 @@ public class SearchManagerImpl implements SearchHandler {
 		solrQuery
 				.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
 						+ "taskCreator:(" + taskCreator + ")");
+
+		QueryResponse rsp = server.query(solrQuery, METHOD.GET);
+		System.out.println("query = " + solrQuery.toString());
+		docsans = rsp.getResults();
+		System.out.println(docsans);
+
+		server.close();
+		return docsans;
+	}
+
+	@Override
+	public SolrDocumentList createdTasks(String email) throws SolrServerException, IOException {
+		String solrUrl = env.getProperty(Constants.SOLR_URL);
+		HttpSolrClient server = new HttpSolrClient(solrUrl);
+		SolrDocumentList docsans = new SolrDocumentList();
+		SolrQuery solrQuery = new SolrQuery();
+		solrQuery
+				.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
+						+ "taskCreator:(" + email + ") AND " + "statusOfCompletion:(" + "open" + ")");
+
+		QueryResponse rsp = server.query(solrQuery, METHOD.GET);
+		System.out.println("query = " + solrQuery.toString());
+		docsans = rsp.getResults();
+		System.out.println(docsans);
+
+		server.close();
+		return docsans;
+	}
+
+	@Override
+	public SolrDocumentList completedTasks(String email) throws SolrServerException, IOException {
+		String solrUrl = env.getProperty(Constants.SOLR_URL);
+		HttpSolrClient server = new HttpSolrClient(solrUrl);
+		SolrDocumentList docsans = new SolrDocumentList();
+		SolrQuery solrQuery = new SolrQuery();
+		solrQuery
+				.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
+						+ "taskCreator:(" + email + ") AND " + "statusOfCompletion:(" + "closed" + ")");
 
 		QueryResponse rsp = server.query(solrQuery, METHOD.GET);
 		System.out.println("query = " + solrQuery.toString());

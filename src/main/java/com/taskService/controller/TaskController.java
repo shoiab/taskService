@@ -3,12 +3,15 @@ package com.taskService.controller;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocumentList;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,13 +39,30 @@ public class TaskController {
 	
 	@Autowired
 	RestTemplate restTemplate;
+	
+	@Autowired
+	private Environment environment;
 
 	@RequestMapping(value = "/createTask", method = RequestMethod.POST)
 	public @ResponseBody JSONObject createTask(
 			@RequestHeader(value = "auth_key") String auth_key,
 			@RequestBody TaskModel taskModel) throws NoSuchAlgorithmException,
-			SolrServerException, IOException {
-		taskModel.setTaskCreationDate(new Date());
+			SolrServerException, IOException, ParseException {
+		
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd kk:mm:ss");
+		
+		String currentDate = simpleDateFormat.format(new Date());
+		
+		taskModel.setTaskCreationDate(currentDate);
+		if(taskModel.getNotificationTime().isEmpty() || taskModel.getNotificationTime() == null){
+			long defaultNotificationDiffrence = Integer.parseInt(environment.getProperty("notificationTime"))*60*1000;
+			String stringDateOfCompleteion = taskModel.getDateOfCompletion();
+			Date date = simpleDateFormat.parse(stringDateOfCompleteion);
+			
+			String defaultNotificationDate = simpleDateFormat.format(date.getTime() - defaultNotificationDiffrence);
+			
+			taskModel.setNotificationTime(defaultNotificationDate);
+		}
 		taskModel.setTaskCreator(dataservice.getUserEmail(auth_key));
 		HttpStatus status = taskservice.createTask(taskModel);
 
@@ -87,6 +107,26 @@ public class TaskController {
 			@RequestHeader(value = "auth_key") String auth_key)
 			throws NoSuchAlgorithmException, SolrServerException, IOException {
 		return taskservice.getAllTasks(auth_key);
+	}
+	
+	@RequestMapping(value = "/createdTasks", method = RequestMethod.POST)
+	public @ResponseBody SolrDocumentList createdTasks(
+			@RequestHeader(value = "auth_key") String auth_key) throws NoSuchAlgorithmException,
+			SolrServerException, IOException {
+		String email = dataservice.getUserEmail(auth_key);
+		
+		return taskservice.createdTasks(email);
+		
+	}
+	
+	@RequestMapping(value = "/completedTasks", method = RequestMethod.POST)
+	public @ResponseBody SolrDocumentList completedTasks(
+			@RequestHeader(value = "auth_key") String auth_key) throws NoSuchAlgorithmException,
+			SolrServerException, IOException {
+		String email = dataservice.getUserEmail(auth_key);
+		
+		return taskservice.completedTasks(email);
+		
 	}
 
 }
