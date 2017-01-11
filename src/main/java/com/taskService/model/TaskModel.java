@@ -35,10 +35,12 @@ public class TaskModel {
 		this.dateOfCompletion = dateOfCompletion;
 	}
 
+	@JsonIgnore
 	public String getStatusOfCompletion() {
 		return statusOfCompletion;
 	}
 
+	@JsonIgnore
 	public void setStatusOfCompletion(String statusOfCompletion) {
 		this.statusOfCompletion = statusOfCompletion;
 	}
