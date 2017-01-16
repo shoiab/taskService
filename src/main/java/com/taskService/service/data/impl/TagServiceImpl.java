@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.taskService.service.data.TagService;
-import com.taskService.solr.SearchHandler;
+import com.taskService.solrService.SearchHandler;
 
 @Service
 public class TagServiceImpl implements TagService{

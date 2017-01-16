@@ -14,7 +14,7 @@ import com.taskService.constants.Constants;
 import com.taskService.dbOperation.DbOperationService;
 import com.taskService.model.GroupModel;
 import com.taskService.service.data.CSVGroupDataService;
-import com.taskService.solr.SearchHandler;
+import com.taskService.solrService.SearchHandler;
 
 @Service
 public class CSVGroupDataServiceImpl implements CSVGroupDataService{

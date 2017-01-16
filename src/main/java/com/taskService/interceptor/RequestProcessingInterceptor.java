@@ -33,10 +33,9 @@ public class RequestProcessingInterceptor extends HandlerInterceptorAdapter {
 			jedis.connect();
 
 			if (auth_key != null) {
-				System.out.println(jedis.exists(auth_key));
+				logger.info(jedis.exists(auth_key));
 				Map<String, String> jedismap = jedis.hgetAll(auth_key);
 
-				// System.out.println("jedismap ::"+jedismap.keySet());
 				if (!jedis.exists(auth_key)) {
 					throw new AuthenticationException("Bad credentials");
 				}

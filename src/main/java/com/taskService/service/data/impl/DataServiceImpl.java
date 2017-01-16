@@ -8,7 +8,7 @@ import com.taskService.dbOperation.DbOperationService;
 import com.taskService.model.TaskModel;
 import com.taskService.service.data.DataService;
 import com.taskService.service.data.TagService;
-import com.taskService.solr.SearchHandler;
+import com.taskService.solrService.SearchHandler;
 import com.taskService.utils.Encrypt;
 import com.taskService.utils.UUIDGeneratorForUser;
 

@@ -1,10 +1,10 @@
 package com.taskService.service.data;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocumentList;
+import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 
 import com.taskService.model.TaskModel;
@@ -17,8 +17,12 @@ public interface TaskService {
 
 	TaskModel fetchTask(String taskName);
 
-	SolrDocumentList createdTasks(String email) throws SolrServerException, IOException;
+	JSONObject getCreatedTasks(String email) throws SolrServerException, IOException;
 
-	SolrDocumentList completedTasks(String email) throws SolrServerException, IOException;
+	JSONObject getCompletedCreatedTasks(String email) throws SolrServerException, IOException;
+
+	JSONObject getPendingTasks(String email) throws SolrServerException, IOException;
+
+	JSONObject getCompletedTasks(String email) throws SolrServerException, IOException;
 
 }

@@ -1,4 +1,4 @@
-package com.taskService.solr.impl;
+package com.taskService.solrService.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -13,26 +14,34 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
+import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import com.taskService.config.SolrConfig;
 import com.taskService.constants.Constants;
 import com.taskService.model.TaskModel;
 import com.taskService.model.TaskRecipientModel;
-import com.taskService.solr.SearchHandler;
+import com.taskService.solrService.SearchHandler;
 
 @Service
 public class SearchManagerImpl implements SearchHandler {
+	
+	static Logger logger = Logger.getLogger(SearchManagerImpl.class.getName());
 
 	@Autowired
 	Environment env;
 	
+	@Autowired
+	private SolrConfig solrconfig;
+	
 	public SolrDocumentList fetchTag(String searchVal, String searchField)
 			throws SolrServerException, IOException {
-		String solrUrl = env.getProperty(Constants.SOLR_URL);
+		/*String solrUrl = env.getProperty(Constants.SOLR_URL);
 
-		HttpSolrClient server = new HttpSolrClient(solrUrl);
+		HttpSolrClient server = new HttpSolrClient(solrUrl);*/
+		HttpSolrClient server = solrconfig.getSolrClient();
 
 		SolrDocumentList docsans = new SolrDocumentList();
 		SolrQuery solrQuery = new SolrQuery();
@@ -46,11 +55,11 @@ public class SearchManagerImpl implements SearchHandler {
 		//solrQuery.setFields("tagName","tagValue");
 
 		QueryResponse rsp = server.query(solrQuery, METHOD.POST);
-		System.out.println("query = " + solrQuery.toString());
+		logger.info("query = " + solrQuery.toString());
 		docsans = rsp.getResults();
-		System.out.println(docsans);
+		logger.info(docsans);
 
-		server.close();
+		//server.close();
 		return docsans;
 	}
 
@@ -58,19 +67,16 @@ public class SearchManagerImpl implements SearchHandler {
 	public void deleteTag(String fieldName, String fieldValue)
 			throws SolrServerException, IOException {
 
-		String solrUrl = env.getProperty(Constants.SOLR_URL);
-		HttpSolrClient server = new HttpSolrClient(solrUrl);
+		HttpSolrClient server = solrconfig.getSolrClient();
 		server.deleteByQuery(fieldName + ":" + fieldValue);
 		server.commit();
-		server.close();
 	}
 
 	@Override
 	public void createTag(String tagName, String tagType, String tagValue, String id)
 			throws SolrServerException, IOException {
-		String solrUrl = env.getProperty(Constants.SOLR_URL);
 
-		HttpSolrClient server = new HttpSolrClient(solrUrl);
+		HttpSolrClient server = solrconfig.getSolrClient();
 		SolrInputDocument tagdoc = new SolrInputDocument();
 
 		tagdoc.addField("tagName", tagName);
@@ -80,14 +86,13 @@ public class SearchManagerImpl implements SearchHandler {
 
 		server.add(tagdoc);
 		server.commit();
-		server.close();
-
 	}
 
 	@Override
 	public SolrDocumentList getAllUsers() throws SolrServerException, IOException {
-		String solrUrl = env.getProperty(Constants.SOLR_URL);
-		HttpSolrClient server = new HttpSolrClient(solrUrl);
+
+		HttpSolrClient server = solrconfig.getSolrClient();
+		
 		SolrDocumentList docsans = new SolrDocumentList();
 		SolrQuery solrQuery = new SolrQuery();
 		solrQuery
@@ -96,19 +101,19 @@ public class SearchManagerImpl implements SearchHandler {
 		/*solrQuery.setFields("tagValue");*/
 
 		QueryResponse rsp = server.query(solrQuery, METHOD.GET);
-		System.out.println("query = " + solrQuery.toString());
+		logger.info("query = " + solrQuery.toString());
 		docsans = rsp.getResults();
-		System.out.println(docsans);
+		logger.info(docsans);
 
-		server.close();
 		return docsans;
 	}
 
 	@Override
 	public SolrDocumentList getAllGroups() throws SolrServerException,
 			IOException {
-		String solrUrl = env.getProperty(Constants.SOLR_URL);
-		HttpSolrClient server = new HttpSolrClient(solrUrl);
+		
+		HttpSolrClient server = solrconfig.getSolrClient();
+		
 		SolrDocumentList docsans = new SolrDocumentList();
 		SolrQuery solrQuery = new SolrQuery();
 		solrQuery
@@ -117,16 +122,17 @@ public class SearchManagerImpl implements SearchHandler {
 		/*solrQuery.setFields("tagValue");*/
 
 		QueryResponse rsp = server.query(solrQuery, METHOD.GET);
-		System.out.println("query = " + solrQuery.toString());
+		logger.info("query = " + solrQuery.toString());
 		docsans = rsp.getResults();
-		System.out.println(docsans);
+		logger.info(docsans);
 
-		server.close();
 		return docsans;
 	}
 
 	@Override
-	public void createTask(TaskModel taskModel) throws SolrServerException, IOException {		
+	public void createTask(TaskModel taskModel) throws SolrServerException, IOException {	
+		
+		HttpSolrClient server = solrconfig.getSolrClient();
 		
 		List<Map<String, String>> recipientlist = new ArrayList<Map<String, String>>();
 		Map<String, String> recipientMap;
@@ -140,8 +146,6 @@ public class SearchManagerImpl implements SearchHandler {
 			}
 		}		
 		
-		String solrUrl = env.getProperty(Constants.SOLR_URL);
-		HttpSolrClient server = new HttpSolrClient(solrUrl);
 		SolrInputDocument tagdoc = new SolrInputDocument();
 		
 		tagdoc.addField("tagName", taskModel.getTaskTitle());
@@ -159,13 +163,13 @@ public class SearchManagerImpl implements SearchHandler {
 
 		server.add(tagdoc);
 		server.commit();
-		server.close();
 	}
 
 	@Override
 	public SolrDocumentList getAllTasks(String taskCreator) throws SolrServerException, IOException {
-		String solrUrl = env.getProperty(Constants.SOLR_URL);
-		HttpSolrClient server = new HttpSolrClient(solrUrl);
+		
+		HttpSolrClient server = solrconfig.getSolrClient();
+		
 		SolrDocumentList docsans = new SolrDocumentList();
 		SolrQuery solrQuery = new SolrQuery();
 		solrQuery
@@ -173,50 +177,103 @@ public class SearchManagerImpl implements SearchHandler {
 						+ "taskCreator:(" + taskCreator + ")");
 
 		QueryResponse rsp = server.query(solrQuery, METHOD.GET);
-		System.out.println("query = " + solrQuery.toString());
+		logger.info("query = " + solrQuery.toString());
 		docsans = rsp.getResults();
-		System.out.println(docsans);
+		logger.info(docsans);
 
-		server.close();
 		return docsans;
 	}
 
 	@Override
-	public SolrDocumentList createdTasks(String email) throws SolrServerException, IOException {
-		String solrUrl = env.getProperty(Constants.SOLR_URL);
-		HttpSolrClient server = new HttpSolrClient(solrUrl);
+	public JSONObject getCreatedTasks(String email) throws SolrServerException, IOException {
+		
+		HttpSolrClient server = solrconfig.getSolrClient();
+		
 		SolrDocumentList docsans = new SolrDocumentList();
 		SolrQuery solrQuery = new SolrQuery();
 		solrQuery
 				.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
-						+ "taskCreator:(" + email + ") AND " + "statusOfCompletion:(" + "open" + ")");
+						+ "taskCreator:(" + email + ") AND " + "statusOfCompletion:(" + Constants.TASK_STATUS_OPEN + ")");
 
 		QueryResponse rsp = server.query(solrQuery, METHOD.GET);
-		System.out.println("query = " + solrQuery.toString());
+		logger.info("query = " + solrQuery.toString());
 		docsans = rsp.getResults();
-		System.out.println(docsans);
-
-		server.close();
-		return docsans;
+		logger.info(docsans);
+		
+		JSONObject resultobj = new JSONObject();
+		resultobj.put("taskCount", docsans.size());
+		resultobj.put("taskList", docsans);
+		return resultobj;
 	}
 
 	@Override
-	public SolrDocumentList completedTasks(String email) throws SolrServerException, IOException {
-		String solrUrl = env.getProperty(Constants.SOLR_URL);
-		HttpSolrClient server = new HttpSolrClient(solrUrl);
+	public JSONObject getCompletedCreatedTasks(String email) throws SolrServerException, IOException {
+
+		HttpSolrClient server = solrconfig.getSolrClient();
+		
 		SolrDocumentList docsans = new SolrDocumentList();
 		SolrQuery solrQuery = new SolrQuery();
 		solrQuery
 				.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
-						+ "taskCreator:(" + email + ") AND " + "statusOfCompletion:(" + "closed" + ")");
+						+ "taskCreator:(" + email + ") AND " + "statusOfCompletion:(" + Constants.TASK_STATUS_CLOSED + ")");
 
 		QueryResponse rsp = server.query(solrQuery, METHOD.GET);
-		System.out.println("query = " + solrQuery.toString());
+		logger.info("query = " + solrQuery.toString());
 		docsans = rsp.getResults();
-		System.out.println(docsans);
+		logger.info(docsans);
 
-		server.close();
-		return docsans;
+		JSONObject resultobj = new JSONObject();
+		resultobj.put("taskCount", docsans.size());
+		resultobj.put("taskList", docsans);
+		
+		return resultobj;
+	}
+
+	@Override
+	public JSONObject getPendingTasks(String email) throws SolrServerException, IOException {
+		
+		HttpSolrClient server = solrconfig.getSolrClient();
+		
+		SolrDocumentList docsans = new SolrDocumentList();
+		SolrQuery solrQuery = new SolrQuery();
+		solrQuery
+				.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
+						+ "recipients:(" + "*" + email + "*" +  ") AND " + "statusOfCompletion:(" + Constants.TASK_STATUS_OPEN + ")");
+
+		QueryResponse rsp = server.query(solrQuery, METHOD.GET);
+		logger.info("query = " + solrQuery.toString());
+		docsans = rsp.getResults();
+		logger.info(docsans);
+		
+		JSONObject resultobj = new JSONObject();
+		resultobj.put("taskCount", docsans.size());
+		resultobj.put("taskList", docsans);
+		
+		return resultobj;
+	}
+
+	@Override
+	public JSONObject getCompletedTasks(String email)
+			throws SolrServerException, IOException {
+		
+		HttpSolrClient server = solrconfig.getSolrClient();
+		
+		SolrDocumentList docsans = new SolrDocumentList();
+		SolrQuery solrQuery = new SolrQuery();
+		solrQuery
+				.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
+						+ "recipients:(" + "*" + email + "*" +  ") AND " + "statusOfCompletion:(" + Constants.TASK_STATUS_OPEN + ")");
+
+		QueryResponse rsp = server.query(solrQuery, METHOD.GET);
+		logger.info("query = " + solrQuery.toString());
+		docsans = rsp.getResults();
+		logger.info(docsans);
+		
+		JSONObject resultobj = new JSONObject();
+		resultobj.put("taskCount", docsans.size());
+		resultobj.put("taskList", docsans);
+		
+		return resultobj;
 	}
 
 }

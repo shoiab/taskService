@@ -1,7 +1,6 @@
 package com.taskService.service.data.impl;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocumentList;
@@ -14,7 +13,7 @@ import com.taskService.dbOperation.DbOperationService;
 import com.taskService.model.TaskModel;
 import com.taskService.service.data.DataService;
 import com.taskService.service.data.TaskService;
-import com.taskService.solr.SearchHandler;
+import com.taskService.solrService.SearchHandler;
 
 @Service
 public class TaskServiceImpl implements TaskService{
@@ -51,13 +50,25 @@ public class TaskServiceImpl implements TaskService{
 	}
 
 	@Override
-	public SolrDocumentList createdTasks(String email) throws SolrServerException, IOException {
-		return solrservice.createdTasks(email);
+	public JSONObject getCreatedTasks(String email) throws SolrServerException, IOException {
+		return solrservice.getCreatedTasks(email);
 	}
 
 	@Override
-	public SolrDocumentList completedTasks(String email) throws SolrServerException, IOException {
-		return solrservice.completedTasks(email);
+	public JSONObject getCompletedCreatedTasks(String email) throws SolrServerException, IOException {
+		return solrservice.getCompletedCreatedTasks(email);
+	}
+
+	@Override
+	public JSONObject getPendingTasks(String email) throws SolrServerException,
+			IOException {
+		return solrservice.getPendingTasks(email);
+	}
+
+	@Override
+	public JSONObject getCompletedTasks(String email) throws SolrServerException,
+	IOException{
+		return solrservice.getCompletedTasks(email);
 	}
 
 }

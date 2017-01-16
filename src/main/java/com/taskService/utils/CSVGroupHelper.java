@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,8 @@ import org.springframework.util.StringUtils;
 
 @Service
 public class CSVGroupHelper {
+	
+	static Logger logger = Logger.getLogger(CSVGroupHelper.class.getName());
 	
 	@Autowired
 	Environment env;
@@ -34,7 +37,7 @@ public class CSVGroupHelper {
 				// use comma as separator
 				String[] user = line.split(cvsSplitBy);
 
-				System.out.println("User [username= " + user[0] + " , emailid="
+				logger.info("User [username= " + user[0] + " , emailid="
 						+ user[1] + "password= " + user[2] + "]");
 				
 				emaillist.add(user[1]);
