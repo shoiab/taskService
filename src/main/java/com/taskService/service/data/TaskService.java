@@ -1,6 +1,7 @@
 package com.taskService.service.data;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocumentList;
@@ -11,7 +12,7 @@ import com.taskService.model.TaskModel;
 
 public interface TaskService {
 
-	HttpStatus createTask(TaskModel taskModel) throws SolrServerException, IOException;
+	HttpStatus createTask(TaskModel taskModel) throws SolrServerException, IOException, ParseException;
 
 	SolrDocumentList getAllTasks(String auth_key) throws SolrServerException, IOException;
 

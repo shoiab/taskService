@@ -1,19 +1,26 @@
 package com.taskService.service.data.impl;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.UUID;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocumentList;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.taskService.constants.Constants;
 import com.taskService.dbOperation.DbOperationService;
 import com.taskService.model.TaskModel;
 import com.taskService.service.data.DataService;
 import com.taskService.service.data.TaskService;
 import com.taskService.solrService.SearchHandler;
+import com.taskService.utils.UUIDGeneratorForUser;
 
 @Service
 public class TaskServiceImpl implements TaskService{
@@ -26,12 +33,40 @@ public class TaskServiceImpl implements TaskService{
 	
 	@Autowired
 	DataService dataservice;
+	
+	@Autowired
+	private Environment environment;
+	
+	@Autowired
+	private UUIDGeneratorForUser generateuuid;
 
 	@Override
-	public HttpStatus createTask(TaskModel taskModel) throws SolrServerException, IOException {
+	public HttpStatus createTask(TaskModel taskModel) throws SolrServerException, IOException, ParseException, NumberFormatException {
 		
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd kk:mm:ss");
+
+		String currentDate = simpleDateFormat.format(new Date());
+
+		taskModel.setTaskCreationDate(currentDate);
+		if (taskModel.getNotificationTime().isEmpty()
+				|| taskModel.getNotificationTime() == null) {
+			long defaultNotificationDiffrence = Integer.parseInt(environment
+					.getProperty("notificationTime")) * 60 * 1000;
+			String stringDateOfCompleteion = taskModel.getDateOfCompletion();
+			Date date = simpleDateFormat.parse(stringDateOfCompleteion);
+
+			String defaultNotificationDate = simpleDateFormat.format(date
+					.getTime() - defaultNotificationDiffrence);
+
+			taskModel.setNotificationTime(defaultNotificationDate);
+		}
+		taskModel.setStatusOfCompletion(Constants.TASK_STATUS_OPEN);
+		
+		UUID uuidForTask = generateuuid.generateUUID();
+		final String key = String.format("task:%s", uuidForTask);
+		taskModel.setTaskid(key);
 		JSONObject taskobj = dbservice.createTask(taskModel);
-		taskModel.setTaskid(taskobj.get("id").toString());
 		if(taskobj.get("httpStatus") != HttpStatus.FOUND){
 			solrservice.createTask(taskModel);
 			dataservice.createTaskTag(taskModel);

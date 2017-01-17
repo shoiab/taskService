@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocumentList;
@@ -24,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.Gson;
-import com.taskService.constants.Constants;
 import com.taskService.model.TaskModel;
 import com.taskService.service.data.DataService;
 import com.taskService.service.data.TaskService;
@@ -50,7 +47,7 @@ public class TaskController {
 			@RequestBody TaskModel taskModel) throws NoSuchAlgorithmException,
 			SolrServerException, IOException, ParseException {
 
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+		/*SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
 				"yyyy-MM-dd kk:mm:ss");
 
 		String currentDate = simpleDateFormat.format(new Date());
@@ -68,7 +65,7 @@ public class TaskController {
 
 			taskModel.setNotificationTime(defaultNotificationDate);
 		}
-		taskModel.setStatusOfCompletion(Constants.TASK_STATUS_OPEN);
+		taskModel.setStatusOfCompletion(Constants.TASK_STATUS_OPEN);*/
 		taskModel.setTaskCreator(dataservice.getUserEmail(auth_key));
 		HttpStatus status = taskservice.createTask(taskModel);
 
