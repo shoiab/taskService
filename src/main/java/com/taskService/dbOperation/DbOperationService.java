@@ -14,7 +14,7 @@ public interface DbOperationService {
 
 	public JSONObject createTask(TaskModel taskModel);
 
-	public TaskModel fetchTask(String taskName);
+	public TaskModel fetchTask(String taskid);
 
 	public void createTaskTag(TaskModel taskModel);
 

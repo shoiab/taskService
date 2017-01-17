@@ -75,8 +75,8 @@ public class TaskServiceImpl implements TaskService{
 	}
 
 	@Override
-	public TaskModel fetchTask(String taskName) {
-		return dbservice.fetchTask(taskName);
+	public TaskModel fetchTask(String taskid) {
+		return dbservice.fetchTask(taskid);
 	}
 
 	@Override

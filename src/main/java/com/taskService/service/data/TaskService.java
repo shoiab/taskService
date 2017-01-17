@@ -16,7 +16,7 @@ public interface TaskService {
 
 	SolrDocumentList getAllTasks(String auth_key) throws SolrServerException, IOException;
 
-	TaskModel fetchTask(String taskName);
+	TaskModel fetchTask(String taskid);
 
 	JSONObject getCreatedTasks(String email) throws SolrServerException, IOException;
 

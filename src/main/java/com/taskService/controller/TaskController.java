@@ -83,10 +83,10 @@ public class TaskController {
 	@RequestMapping(value = "/postTask", method = RequestMethod.GET)
 	public @ResponseBody JSONObject notifyTask(
 			@RequestHeader(value = "auth_key") String auth_key,
-			@RequestParam(value = "taskTitle") String taskTitle)
+			@RequestParam(value = "taskid") String taskid)
 			throws URISyntaxException {
 
-		TaskModel taskmodel = taskservice.fetchTask(taskTitle);
+		TaskModel taskmodel = taskservice.fetchTask(taskid);
 		JSONObject statusobj = new JSONObject();
 
 		if (taskmodel != null) {

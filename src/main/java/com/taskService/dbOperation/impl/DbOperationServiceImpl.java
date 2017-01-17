@@ -116,7 +116,7 @@ public class DbOperationServiceImpl implements DbOperationService {
 	}
 
 	@Override
-	public TaskModel fetchTask(String taskName) {
+	public TaskModel fetchTask(String taskid) {
 		MongoDatabase db = mongoClient.getDatabase(environment
 				.getProperty("mongo.dataBase"));
 
@@ -124,7 +124,7 @@ public class DbOperationServiceImpl implements DbOperationService {
 				environment.getProperty("mongo.taskCollection"),
 				BasicDBObject.class);
 		BasicDBObject whereQuery = new BasicDBObject();
-		whereQuery.put("taskTitle", taskName);
+		whereQuery.put("taskid", taskid);
 
 		FindIterable<BasicDBObject> obj = coll.find(whereQuery);
 		TaskModel taskModel = new TaskModel();
