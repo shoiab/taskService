@@ -10,6 +10,15 @@ import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocumentList;
 import org.json.simple.JSONObject;
+import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SchedulerFactory;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -17,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import com.taskService.constants.Constants;
 import com.taskService.dbOperation.DbOperationService;
+import com.taskService.jobScheduler.TaskJob;
 import com.taskService.model.TaskModel;
 import com.taskService.service.data.DataService;
 import com.taskService.service.data.TaskService;
@@ -72,6 +82,29 @@ public class TaskServiceImpl implements TaskService {
 		UUID uuidForTask = generateuuid.generateUUID();
 		final String key = String.format("task%s", uuidForTask);
 		taskModel.setTaskId(key);
+		
+		try {
+			Date triggerDate = simpleDateFormat.parse(taskModel.getNotificationTime());
+			logger.info("triggerDate" +triggerDate);
+            JobDetail job = JobBuilder.newJob(TaskJob.class).withIdentity(taskModel.getTaskId()).build();
+            
+            JobDataMap jobDataMap=  job.getJobDataMap();
+            jobDataMap.put("objectName", taskModel);
+            
+            Trigger trigger = TriggerBuilder.newTrigger().startAt(triggerDate).usingJobData(jobDataMap).build();
+            
+            /*Trigger trigger = TriggerBuilder.newTrigger().withSchedule(
+            		SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(30).repeatForever())
+            		.build();*/
+            SchedulerFactory schFactory = new StdSchedulerFactory();
+            Scheduler scheduler = schFactory.getScheduler(); 
+            scheduler.start();
+            scheduler.scheduleJob(job, trigger);
+
+        }catch (SchedulerException e) {
+
+            e.printStackTrace();
+        }
 
 		JSONObject taskobj = dbservice.createTask(taskModel);
 		if (taskobj.get("httpStatus") != HttpStatus.FOUND) {
