@@ -24,12 +24,18 @@ public interface SearchHandler {
 
 	SolrDocumentList getAllTasks(String userEmail) throws SolrServerException, IOException;
 
-	JSONObject getCreatedTasks(String email) throws SolrServerException, IOException;
+	//JSONObject getCreatedTasks(String email) throws SolrServerException, IOException;
 
-	JSONObject getCompletedCreatedTasks(String email) throws SolrServerException, IOException;
+	/*JSONObject getCompletedCreatedTasks(String email) throws SolrServerException, IOException;
 
-	JSONObject getPendingTasks(String email) throws SolrServerException, IOException;
+	JSONObject getPendingTasks(String email) throws SolrServerException, IOException;*/
 
-	JSONObject getCompletedTasks(String email) throws SolrServerException, IOException;
+	//JSONObject getCompletedTasks(String email) throws SolrServerException, IOException;
+
+	void updateTaskStatus(String email, String taskId, String taskStatus) throws SolrServerException, IOException;
+
+	JSONObject getTasksForStatus(String email, String taskStatus) throws SolrServerException, IOException;
+
+	JSONObject getAssignedTasksForStatus(String email, String taskStatus) throws SolrServerException, IOException;
 
 }

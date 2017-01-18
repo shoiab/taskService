@@ -18,4 +18,9 @@ public interface DbOperationService {
 
 	public void createTaskTag(TaskModel taskModel);
 
+	public TaskModel updateTaskStatus(String email, String taskId, String taskStatus);
+
+	public JSONObject closeTask(String email, String taskId, String taskStatus);
+	
+
 }
