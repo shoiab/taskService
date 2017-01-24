@@ -15,4 +15,6 @@ public interface DataService {
 
 	public JSONObject closeTask(String email, String taskId, String taskStatus);
 
+	public void createUserTaskMap(TaskModel taskModel);
+
 }

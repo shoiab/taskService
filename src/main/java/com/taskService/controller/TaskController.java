@@ -41,7 +41,7 @@ public class TaskController {
 	@Autowired
 	private Environment environment;
 
-	@RequestMapping(value = "/createTask", method = RequestMethod.POST)
+	/*@RequestMapping(value = "/createTask", method = RequestMethod.POST)
 	public @ResponseBody JSONObject createTask(
 			@RequestHeader(value = "auth_key") String auth_key,
 			@RequestBody TaskModel taskModel) throws NoSuchAlgorithmException,
@@ -59,9 +59,23 @@ public class TaskController {
 		}
 
 		return statusobj;
+	}*/
+	
+	@RequestMapping(value = "/createNewTask", method = RequestMethod.POST)
+	public @ResponseBody JSONObject createNewTask(
+			@RequestHeader(value = "auth_key") String auth_key,
+			@RequestBody TaskModel taskModel) throws NoSuchAlgorithmException,
+			SolrServerException, IOException, ParseException {
+		
+		taskModel.setTaskAssigner(dataservice.getUserEmail(auth_key));	
+		JSONObject statusobj = taskservice.createNewTask(taskModel);
+		
+		return statusobj;
 	}
+	
+	
 
-	@RequestMapping(value = "/postTask", method = RequestMethod.GET)
+	/*@RequestMapping(value = "/postTask", method = RequestMethod.GET)
 	public @ResponseBody JSONObject notifyTask(
 			@RequestHeader(value = "auth_key") String auth_key,
 			@RequestParam(value = "taskid") String taskid)
@@ -84,7 +98,7 @@ public class TaskController {
 
 		}
 		return statusobj;
-	}
+	}*/
 
 	@RequestMapping(value = "/getUserTasks", method = RequestMethod.POST)
 	public @ResponseBody SolrDocumentList getMyTasks(
@@ -93,54 +107,15 @@ public class TaskController {
 		return taskservice.getAllTasks(auth_key);
 	}
 
-	/*@RequestMapping(value = "/getOpenCreatedTasks", method = RequestMethod.POST)
-	public @ResponseBody JSONObject getOpenCreatedTasks(
-			@RequestHeader(value = "auth_key") String auth_key)
-			throws NoSuchAlgorithmException, SolrServerException, IOException {
-		String email = dataservice.getUserEmail(auth_key);
-
-		return taskservice.getCreatedTasks(email);
-
-	}
-
-	@RequestMapping(value = "/getCompletedCreatedTasks", method = RequestMethod.POST)
-	public @ResponseBody JSONObject completedTasks(
-			@RequestHeader(value = "auth_key") String auth_key)
-			throws NoSuchAlgorithmException, SolrServerException, IOException {
-		String email = dataservice.getUserEmail(auth_key);
-
-		return taskservice.getCompletedCreatedTasks(email);
-
-	}*/
-	
-	@RequestMapping(value = "/getAssignedTasksForStatus", method = RequestMethod.POST)
-	public @ResponseBody JSONObject getAssignedTasksForStatus(
-			@RequestHeader(value = "auth_key") String auth_key,
-			@RequestHeader(value = "taskStatus") String taskStatus)
-			throws NoSuchAlgorithmException, SolrServerException, IOException {
-		String email = dataservice.getUserEmail(auth_key);
-
-		return taskservice.getAssignedTasksForStatus(email, taskStatus);
-
-	}
-
-	@RequestMapping(value = "/getTasksForStatus", method = RequestMethod.POST)
+	//Fetch tasks from solr
+	/*@RequestMapping(value = "/getTasksForStatus/v2", method = RequestMethod.POST)
 	public @ResponseBody JSONObject getTasksForStatus(
 			@RequestHeader(value = "auth_key") String auth_key,
 			@RequestHeader(value = "taskStatus") String taskStatus)
 			throws NoSuchAlgorithmException, SolrServerException, IOException {
 		String email = dataservice.getUserEmail(auth_key);
 
-		return taskservice.getTasksForStatus(email, taskStatus);
-	}
-	
-	/*@RequestMapping(value = "/getCompletedTasks", method = RequestMethod.POST)
-	public @ResponseBody JSONObject getCompletedTasks(
-			@RequestHeader(value = "auth_key") String auth_key)
-			throws NoSuchAlgorithmException, SolrServerException, IOException {
-		String email = dataservice.getUserEmail(auth_key);
-
-		return taskservice.getCompletedTasks(email);
+		return taskservice.getTasksForStatusv2(email, taskStatus);
 	}*/
 	
 	@RequestMapping(value = "/changeTaskStatus", method = RequestMethod.POST)
@@ -148,10 +123,29 @@ public class TaskController {
 			@RequestHeader(value = "auth_key") String auth_key,
 			@RequestHeader(value = "taskId") String taskId,
 			@RequestHeader(value = "taskStatus") String taskStatus)
-			throws NoSuchAlgorithmException, SolrServerException, IOException {
+			throws NoSuchAlgorithmException, SolrServerException, IOException, ParseException {
 		String email = dataservice.getUserEmail(auth_key);
 
 		return taskservice.changeTaskStatus(email, taskId, taskStatus);
+	}
+	
+	
+	//Fetch tasks from mongoDB
+	 @RequestMapping(value = "/getTasksForStatus/v1", method = RequestMethod.GET)
+		public @ResponseBody JSONObject getOverduedTasksv1(
+				@RequestHeader(value = "auth_key") String auth_key,
+				@RequestHeader(value = "status") String status) throws SolrServerException, IOException{
+			String email = dataservice.getUserEmail(auth_key);
+			return taskservice.getTasksForStatusv1(email, status);
+		}
+	
+	 
+	//Fetch task count from solr
+	@RequestMapping(value = "/getTaskCount/v2", method = RequestMethod.GET)
+	public @ResponseBody JSONObject getTasksCountv2(
+			@RequestHeader(value = "auth_key") String auth_key) throws SolrServerException, IOException, ParseException{
+		String email = dataservice.getUserEmail(auth_key);
+		return taskservice.getTasksCountv2(email);
 	}
 	
 

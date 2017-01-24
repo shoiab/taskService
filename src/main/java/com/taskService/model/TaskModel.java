@@ -2,6 +2,8 @@ package com.taskService.model;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Required;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
@@ -58,6 +60,7 @@ public class TaskModel {
 		return description;
 	}
 
+	@Required
 	public void setDescription(String description) {
 		this.description = description;
 	}
@@ -72,10 +75,12 @@ public class TaskModel {
 		this.taskCreationDate = taskCreationDate;
 	}
 
+	@JsonIgnore
 	public String getStartDate() {
 		return startDate;
 	}
 
+	@JsonIgnore
 	public void setStartDate(String startDate) {
 		this.startDate = startDate;
 	}

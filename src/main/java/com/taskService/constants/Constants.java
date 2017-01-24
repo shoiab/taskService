@@ -14,6 +14,9 @@ public class Constants {
 	public static final String TASK_STATUS_CLOSED = "closed";
 	public static final String TASK_STATUS_INPROGRESS = "inProgress";
 	public static final String TASK_STATUS_COMPLETED = "completed";
+	public static final String TASK_STATUS_OVERDUE = "overdue";
+	public static final String TASK_STATUS_NEW = "new";
+	public static final String TASK_STATUS_TODAY = "today";
 	
 	public static final String EMP_EMAIL = "email";
 	

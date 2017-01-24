@@ -21,6 +21,9 @@ public interface DbOperationService {
 	public TaskModel updateTaskStatus(String email, String taskId, String taskStatus);
 
 	public JSONObject closeTask(String email, String taskId, String taskStatus);
-	
 
+	public void createUserTaskMap(TaskModel taskModel);
+
+	public JSONObject getNewTasks(String email, String status);
+	
 }

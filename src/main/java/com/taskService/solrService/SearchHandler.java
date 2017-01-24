@@ -1,6 +1,7 @@
 package com.taskService.solrService;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocumentList;
@@ -16,11 +17,11 @@ public interface SearchHandler {
 
 	void createTag(String tagName, String tagType, String tagValue, String id) throws SolrServerException, IOException;
 
-	SolrDocumentList getAllUsers() throws SolrServerException, IOException;
+	JSONObject getAllUsers() throws SolrServerException, IOException;
 
 	SolrDocumentList getAllGroups() throws SolrServerException, IOException;
 
-	void createTask(TaskModel taskModel) throws SolrServerException, IOException;
+	void createTask(TaskModel taskModel) throws SolrServerException, IOException, ParseException;
 
 	SolrDocumentList getAllTasks(String userEmail) throws SolrServerException, IOException;
 
@@ -34,8 +35,10 @@ public interface SearchHandler {
 
 	void updateTaskStatus(String email, String taskId, String taskStatus) throws SolrServerException, IOException;
 
-	JSONObject getTasksForStatus(String email, String taskStatus) throws SolrServerException, IOException;
+	JSONObject getTasksForStatusv2(String email, String taskStatus) throws SolrServerException, IOException;
 
 	JSONObject getAssignedTasksForStatus(String email, String taskStatus) throws SolrServerException, IOException;
+
+	JSONObject getTasksCountv2(String email) throws SolrServerException, IOException, java.text.ParseException;
 
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocumentList;
+import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,7 @@ public class TagServiceImpl implements TagService{
 	}
 
 	@Override
-	public SolrDocumentList getAllUsers() throws SolrServerException, IOException {
+	public JSONObject getAllUsers() throws SolrServerException, IOException {
 		return solrService.getAllUsers();
 	}
 

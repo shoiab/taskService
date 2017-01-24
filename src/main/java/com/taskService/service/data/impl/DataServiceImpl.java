@@ -58,4 +58,8 @@ public class DataServiceImpl implements DataService {
 		return dbservice.closeTask(email, taskId, taskStatus);
 	}
 
+	@Override
+	public void createUserTaskMap(TaskModel taskModel) {
+		dbservice.createUserTaskMap(taskModel);
+	}
 }

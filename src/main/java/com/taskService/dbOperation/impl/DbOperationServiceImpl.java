@@ -1,5 +1,11 @@
 package com.taskService.dbOperation.impl;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.log4j.Logger;
 import org.bson.Document;
 import org.json.simple.JSONObject;
@@ -19,7 +25,9 @@ import com.taskService.constants.Constants;
 import com.taskService.dbOperation.DbOperationService;
 import com.taskService.model.GroupModel;
 import com.taskService.model.TagModel;
+import com.taskService.model.TaskAssigneeModel;
 import com.taskService.model.TaskModel;
+import com.taskService.model.UserTaskModel;
 
 @Service
 public class DbOperationServiceImpl implements DbOperationService {
@@ -100,7 +108,7 @@ public class DbOperationServiceImpl implements DbOperationService {
 		JSONObject json = new JSONObject();
 		
 		BasicDBObject whereQuery = new BasicDBObject();
-		whereQuery.put("taskTitle", taskModel.getTaskTitle());
+		whereQuery.put("description", taskModel.getTaskTitle());
 		FindIterable<BasicDBObject> obj = coll.find(whereQuery);
 		
 		BasicDBObject basicGroupObj = (BasicDBObject) JSON.parse(gson
@@ -109,12 +117,12 @@ public class DbOperationServiceImpl implements DbOperationService {
 		if (obj.first() == null) {
 			
 			coll.insertOne(basicGroupObj);
-			json.put("httpStatus", HttpStatus.OK);
-			json.put("id", basicGroupObj.get("_id"));
+			json.put("status", HttpStatus.OK.value());
+			json.put("message", "Task is created successfully");
 			return json;
 		}else{
-			json.put("httpStatus", HttpStatus.FOUND);
-			json.put("id", basicGroupObj.get("_id"));
+			json.put("status", HttpStatus.FOUND.value());
+			json.put("message", "Task already found");
 			return json;
 		}
 	}
@@ -264,6 +272,13 @@ public class DbOperationServiceImpl implements DbOperationService {
 				return statusobj;
 			}
 			
+			if(status.equals(Constants.TASK_STATUS_CLOSED)){
+				statusobj.put("status", HttpStatus.OK.value());
+				statusobj.put("message", "Task is already closed!");
+				statusobj.put("taskobj", null);
+				return statusobj;
+			}
+			
 			taskmodel = (TaskModel) (new Gson()).fromJson(obj.first().toString(),
 					TaskModel.class);
 			taskmodel.setTaskStatus(taskStatus);
@@ -291,4 +306,92 @@ public class DbOperationServiceImpl implements DbOperationService {
 		return statusobj;
 		
 	}
+
+	@Override
+	public void createUserTaskMap(TaskModel taskModel) {
+		MongoDatabase db = mongoClient.getDatabase(environment
+				.getProperty("mongo.dataBase"));
+
+		MongoCollection<BasicDBObject> coll = db.getCollection(
+				environment.getProperty("mongo.userTaskCollection"),
+				BasicDBObject.class);			
+
+		Gson gson = new Gson();
+		BasicDBObject whereQuery = new BasicDBObject();
+		UserTaskModel usertaskmodel;
+
+		for(TaskAssigneeModel assigneemodel : taskModel.getAssigneeList()){
+			
+			usertaskmodel = new UserTaskModel();
+			usertaskmodel.setEmpEmail(assigneemodel.getAssignee());
+			List<String> taskList = new ArrayList<String>();
+			taskList.add(taskModel.getTaskId());
+			usertaskmodel.setTaskList(taskList);
+			
+			whereQuery.put("empEmail", assigneemodel.getAssignee());
+			
+			FindIterable<BasicDBObject> obj = coll.find(whereQuery);
+			
+			if(obj.first() == null){
+				BasicDBObject basicobj = (BasicDBObject) JSON.parse(gson
+						.toJson(usertaskmodel));
+				
+				coll.insertOne(basicobj);
+			}else{
+				usertaskmodel = new UserTaskModel();
+				usertaskmodel = (UserTaskModel) (new Gson()).fromJson(obj.first().toString(),
+						UserTaskModel.class);
+				List<String> tasks = usertaskmodel.getTaskList();
+				tasks.add(taskModel.getTaskId());
+				
+				Document newdocument = new Document();
+				Document searchQuery = new Document().append("empEmail", assigneemodel.getAssignee());
+				newdocument.put("$set", new BasicDBObject().append("taskList", tasks));	
+				coll.updateOne(searchQuery, newdocument);
+			}
+			
+		}
+	}
+
+	@Override
+	public JSONObject getNewTasks(String email, String status) {
+		MongoDatabase db = mongoClient.getDatabase(environment
+				.getProperty("mongo.dataBase"));
+
+		MongoCollection<BasicDBObject> coll = db.getCollection(
+				environment.getProperty("mongo.taskCollection"),
+				BasicDBObject.class);	
+		
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd 00:00:00");
+		Date now = new Date();
+		String currentDate = simpleDateFormat.format(now);
+		Date tomDate = DateUtils.addDays(now, 1);
+		String tomoDate = simpleDateFormat.format(tomDate);
+
+		BasicDBObject whereQuery = new BasicDBObject();
+		whereQuery.put("assigneeList.assignee", email);
+		whereQuery.put("taskStatus", Constants.TASK_STATUS_OPEN);
+		whereQuery.put("endDate", new BasicDBObject("$gte", currentDate).append("$lte", tomoDate));
+		
+		FindIterable<BasicDBObject> taskobj = coll.find(whereQuery);
+		
+		List<TaskModel> tasklist = new ArrayList<TaskModel>();
+		JSONObject statusobj = new JSONObject();
+
+		if(taskobj.first() != null){
+			for(BasicDBObject newTaskObj : taskobj){
+				TaskModel taskModel = (TaskModel) (new Gson()).fromJson(newTaskObj.toString(),
+						TaskModel.class);
+				tasklist.add(taskModel);
+			}
+		}
+		
+		logger.info("taskList :: "+tasklist);
+		
+		statusobj.put("status", HttpStatus.OK.value());
+		statusobj.put("tasklist", tasklist);
+		return statusobj;
+	}
+
 }

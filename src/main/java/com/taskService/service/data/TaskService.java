@@ -12,7 +12,7 @@ import com.taskService.model.TaskModel;
 
 public interface TaskService {
 
-	HttpStatus createTask(TaskModel taskModel) throws SolrServerException, IOException, ParseException;
+	//HttpStatus createTask(TaskModel taskModel) throws SolrServerException, IOException, ParseException;
 
 	SolrDocumentList getAllTasks(String auth_key) throws SolrServerException, IOException;
 
@@ -26,10 +26,16 @@ public interface TaskService {
 
 	JSONObject getCompletedTasks(String email) throws SolrServerException, IOException;*/
 
-	JSONObject changeTaskStatus(String email, String taskId, String taskStatus) throws SolrServerException, IOException;
+	JSONObject changeTaskStatus(String email, String taskId, String taskStatus) throws SolrServerException, IOException, ParseException;
 
-	JSONObject getTasksForStatus(String email, String taskStatus) throws SolrServerException, IOException;
+	JSONObject getTasksForStatusv2(String email, String taskStatus) throws SolrServerException, IOException;
 
-	JSONObject getAssignedTasksForStatus(String email, String taskStatus) throws SolrServerException, IOException;
+	//JSONObject getAssignedTasksForStatus(String email, String taskStatus) throws SolrServerException, IOException;
+
+	JSONObject createNewTask(TaskModel taskModel) throws ParseException, SolrServerException, IOException;
+
+	JSONObject getTasksCountv2(String email) throws SolrServerException, IOException, ParseException;
+
+	JSONObject getTasksForStatusv1(String email, String status);
 
 }

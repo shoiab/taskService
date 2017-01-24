@@ -1,11 +1,15 @@
 package com.taskService.solrService.impl;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrRequest.METHOD;
@@ -18,6 +22,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.taskService.config.SolrConfig;
@@ -90,9 +95,10 @@ public class SearchManagerImpl implements SearchHandler {
 	}
 
 	@Override
-	public SolrDocumentList getAllUsers() throws SolrServerException, IOException {
+	public JSONObject getAllUsers() throws SolrServerException, IOException {
 
 		HttpSolrClient server = solrconfig.getSolrClient();
+		JSONObject statusobj = new JSONObject();
 		
 		SolrDocumentList docsans = new SolrDocumentList();
 		SolrQuery solrQuery = new SolrQuery();
@@ -105,8 +111,11 @@ public class SearchManagerImpl implements SearchHandler {
 		logger.info("query = " + solrQuery.toString());
 		docsans = rsp.getResults();
 		logger.info(docsans);
+		
+		statusobj.put("userCount", docsans.size());
+		statusobj.put("users", docsans);
 
-		return docsans;
+		return statusobj;
 	}
 
 	@Override
@@ -131,12 +140,14 @@ public class SearchManagerImpl implements SearchHandler {
 	}
 
 	@Override
-	public void createTask(TaskModel taskModel) throws SolrServerException, IOException {	
+	public void createTask(TaskModel taskModel) throws SolrServerException, IOException, ParseException {	
 		
 		HttpSolrClient server = solrconfig.getSolrClient();
 		
 		List<Map<String, String>> assigneelist = new ArrayList<Map<String, String>>();
 		Map<String, String> assigneeMap;
+		
+		//Map<String, String> taskmap = (Map) taskModel;
 		
 		if(taskModel.getAssigneeList().size() > 0){
 			for(TaskAssigneeModel recipientmodel : taskModel.getAssigneeList()){
@@ -146,6 +157,15 @@ public class SearchManagerImpl implements SearchHandler {
 				assigneelist.add(assigneeMap);
 			}
 		}		
+		
+		 SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+					"yyyy-MM-dd kk:mm:ss");
+
+		String taskCreationDate = taskModel.getTaskCreationDate();
+		Date now = simpleDateFormat.parse(taskCreationDate);
+		String today = org.apache.solr.common.util.DateUtil.
+                getThreadLocalDateFormat().format(now);
+		taskModel.setTaskCreationDate(today);
 		
 		SolrInputDocument tagdoc = new SolrInputDocument();
 		
@@ -167,7 +187,7 @@ public class SearchManagerImpl implements SearchHandler {
 	}
 
 	@Override
-	public SolrDocumentList getAllTasks(String taskCreator) throws SolrServerException, IOException {
+	public SolrDocumentList getAllTasks(String email) throws SolrServerException, IOException {
 		
 		HttpSolrClient server = solrconfig.getSolrClient();
 		
@@ -175,7 +195,7 @@ public class SearchManagerImpl implements SearchHandler {
 		SolrQuery solrQuery = new SolrQuery();
 		solrQuery
 				.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
-						+ "taskAssigner:(" + taskCreator + ")");
+						+ "assignees:(" + "*" + email + "*" + ")");
 
 		QueryResponse rsp = server.query(solrQuery, METHOD.GET);
 		logger.info("query = " + solrQuery.toString());
@@ -306,7 +326,7 @@ public class SearchManagerImpl implements SearchHandler {
 	}
 
 	@Override
-	public JSONObject getTasksForStatus(String email, String taskStatus) throws SolrServerException, IOException {
+	public JSONObject getTasksForStatusv2(String email, String taskStatus) throws SolrServerException, IOException {
 		
 		HttpSolrClient server = solrconfig.getSolrClient();
 		
@@ -347,6 +367,123 @@ public class SearchManagerImpl implements SearchHandler {
 		resultobj.put("taskCount", docsans.size());
 		resultobj.put("taskList", docsans);
 		return resultobj;
+	}
+	
+	@Override
+	public JSONObject getTasksCountv2(String email) throws SolrServerException, IOException, ParseException {
+		
+		int overduecount = getOverdueTaskCount(email);
+		int newTaskCount = getOpenTaskCount(email);
+		int closedCount = getClosedCount(email);
+		int todayCount = getTodayTaskCount(email);
+
+		JSONObject resultobj = new JSONObject();
+		resultobj.put("status", HttpStatus.OK.value());
+		resultobj.put("message", "success");
+		resultobj.put("overdue", overduecount);
+		resultobj.put("new", newTaskCount);
+		resultobj.put("closed", closedCount);
+		resultobj.put("today", todayCount);
+		
+		return resultobj;
+	}
+
+	private int getTodayTaskCount(String email) throws SolrServerException, IOException, ParseException {
+		HttpSolrClient server = solrconfig.getSolrClient();
+		SolrDocumentList todayTaskDoc = new SolrDocumentList();
+		SolrQuery todayTaskSolrQuery = new SolrQuery();
+		
+		 SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+					"yyyy-MM-dd 00:00:00");
+
+		String currentDate = simpleDateFormat.format(new Date());
+		Date today = simpleDateFormat.parse(currentDate);
+		
+		Date tomDate = DateUtils.addDays(new Date(), 1);
+		String tomoDate = simpleDateFormat.format(tomDate);
+		Date tomorrow = simpleDateFormat.parse(tomoDate);
+		
+		String fromDate = org.apache.solr.common.util.DateUtil.
+                getThreadLocalDateFormat().format(today);
+		
+		String toDate = org.apache.solr.common.util.DateUtil.
+                getThreadLocalDateFormat().format(tomorrow);
+				
+		todayTaskSolrQuery
+		.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
+				+ "assignees:(" + "*"+email+"*" + ") AND " + "taskStatus:(" + Constants.TASK_STATUS_OPEN + ") AND " + "taskCreationDate:[" + fromDate  + " TO " +  toDate + "]");
+		
+		QueryResponse rsp = server.query(todayTaskSolrQuery, METHOD.GET);
+		logger.info("query = " + todayTaskSolrQuery.toString());
+		todayTaskDoc = rsp.getResults();
+		logger.info(todayTaskDoc);
+		
+		return todayTaskDoc.size();
+	}
+
+	private int getClosedCount(String email) throws SolrServerException, IOException {
+		HttpSolrClient server = solrconfig.getSolrClient();
+		SolrDocumentList closedTaskDoc = new SolrDocumentList();
+		SolrQuery closedTaskSolrQuery = new SolrQuery();
+		closedTaskSolrQuery
+		.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
+				+ "assignees:(" + "*"+email+"*" + ") AND " + "taskStatus:(" + Constants.TASK_STATUS_CLOSED + ")");
+		
+		QueryResponse rsp = server.query(closedTaskSolrQuery, METHOD.GET);
+		logger.info("query = " + closedTaskSolrQuery.toString());
+		closedTaskDoc = rsp.getResults();
+		logger.info(closedTaskDoc);
+		
+		return closedTaskDoc.size();
+	}
+
+	private int getOpenTaskCount(String email) throws SolrServerException, IOException, ParseException {
+		HttpSolrClient server = solrconfig.getSolrClient();
+		SolrDocumentList openTaskDoc = new SolrDocumentList();
+		SolrQuery openTaskSolrQuery = new SolrQuery();
+		
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd kk:mm:ss");
+		String currentDate = simpleDateFormat.format(new Date());
+		Date now = simpleDateFormat.parse(currentDate);
+		
+		String toDate = org.apache.solr.common.util.DateUtil.
+                getThreadLocalDateFormat().format(now);
+		
+		openTaskSolrQuery
+		.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
+				+ "assignees:(" + "*"+email+ "*" + ") AND " + "taskStatus:(" + Constants.TASK_STATUS_OPEN + ") AND " + "endDate:[*" + " TO " + toDate + "]");
+		
+		QueryResponse rsp = server.query(openTaskSolrQuery, METHOD.GET);
+		logger.info("query = " + openTaskSolrQuery.toString());
+		openTaskDoc = rsp.getResults();
+		logger.info(openTaskDoc);
+		
+		return openTaskDoc.size();
+	}
+
+	private int getOverdueTaskCount(String email) throws ParseException, SolrServerException, IOException {
+		HttpSolrClient server = solrconfig.getSolrClient();
+		SolrDocumentList overduedoc = new SolrDocumentList();
+		SolrQuery overduesolrQuery = new SolrQuery();
+		
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd kk:mm:ss");
+		String currentDate = simpleDateFormat.format(new Date());
+		Date now = simpleDateFormat.parse(currentDate);
+		
+		String toDate = org.apache.solr.common.util.DateUtil.
+                getThreadLocalDateFormat().format(now);
+		overduesolrQuery
+				.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
+						+ "assignees:(" + "*"+email+"*" + ") AND " + "endDate:[*" + " TO " + toDate + "] AND taskStatus:(" + Constants.TASK_STATUS_OPEN + ")");
+
+		QueryResponse rsp = server.query(overduesolrQuery, METHOD.GET);
+		logger.info("query = " + overduesolrQuery.toString());
+		overduedoc = rsp.getResults();
+		logger.info(overduedoc);
+		
+		return overduedoc.size();
 	}
 
 }
