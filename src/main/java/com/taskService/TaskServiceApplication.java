@@ -20,6 +20,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import com.mongodb.MongoClient;
+import com.mongodb.client.MongoDatabase;
 import com.taskService.interceptor.RequestProcessingInterceptor;
 
 import springfox.documentation.builders.PathSelectors;
@@ -51,7 +52,7 @@ public class TaskServiceApplication extends WebMvcConfigurerAdapter{
 	}
 
 	@Bean(name = "dataSourceClient")
-	public MongoClient dataSource() {
+	public MongoDatabase dataSource() {
 
 		String host = env.getProperty("mongo.url").toString();
 
@@ -60,8 +61,12 @@ public class TaskServiceApplication extends WebMvcConfigurerAdapter{
 
 		String db = env.getProperty("mongo.dataBase").toString();
 
-		return new MongoClient(env.getProperty("mongo.url"),
+		 MongoClient client = new MongoClient(env.getProperty("mongo.url"),
 				Integer.valueOf(env.getProperty("mongo.port")));
+		 
+		 return client.getDatabase(env
+					.getProperty("mongo.dataBase"));
+		 
 
 	}
 	

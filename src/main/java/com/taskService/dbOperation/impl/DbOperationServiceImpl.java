@@ -38,14 +38,14 @@ public class DbOperationServiceImpl implements DbOperationService {
 	private Environment environment;
 
 	@Autowired
-	private MongoClient mongoClient;
+	private MongoDatabase taskdb;
 
 	@Override
 	public void createTag(String name, String tagTypeUser, String email) {
-		MongoDatabase db = mongoClient.getDatabase(environment
-				.getProperty("mongo.dataBase"));
+		/*MongoDatabase db = mongoClient.getDatabase(environment
+				.getProperty("mongo.dataBase"));*/
 
-		MongoCollection<BasicDBObject> coll = db.getCollection(
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
 				environment.getProperty("mongo.tagCollection"),
 				BasicDBObject.class);
 		
@@ -63,10 +63,8 @@ public class DbOperationServiceImpl implements DbOperationService {
 
 	@Override
 	public JSONObject createGroup(GroupModel groupmodel) {
-		MongoDatabase db = mongoClient.getDatabase(environment
-				.getProperty("mongo.dataBase"));
-
-		MongoCollection<BasicDBObject> coll = db.getCollection(
+	
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
 				environment.getProperty("mongo.groupCollection"),
 				BasicDBObject.class);
 
@@ -96,10 +94,8 @@ public class DbOperationServiceImpl implements DbOperationService {
 
 	@Override
 	public JSONObject createTask(TaskModel taskModel) {
-		MongoDatabase db = mongoClient.getDatabase(environment
-				.getProperty("mongo.dataBase"));
 
-		MongoCollection<BasicDBObject> coll = db.getCollection(
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
 				environment.getProperty("mongo.taskCollection"),
 				BasicDBObject.class);
 
@@ -129,10 +125,8 @@ public class DbOperationServiceImpl implements DbOperationService {
 
 	@Override
 	public TaskModel fetchTask(String taskid) {
-		MongoDatabase db = mongoClient.getDatabase(environment
-				.getProperty("mongo.dataBase"));
 
-		MongoCollection<BasicDBObject> coll = db.getCollection(
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
 				environment.getProperty("mongo.taskCollection"),
 				BasicDBObject.class);
 		BasicDBObject whereQuery = new BasicDBObject();
@@ -149,10 +143,8 @@ public class DbOperationServiceImpl implements DbOperationService {
 
 	@Override
 	public void createTaskTag(TaskModel taskModel) {
-		MongoDatabase db = mongoClient.getDatabase(environment
-				.getProperty("mongo.dataBase"));
 
-		MongoCollection<BasicDBObject> coll = db.getCollection(
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
 				environment.getProperty("mongo.tagCollection"),
 				BasicDBObject.class);
 
@@ -184,14 +176,12 @@ public class DbOperationServiceImpl implements DbOperationService {
 	@Override
 	public TaskModel updateTaskStatus(String email, String taskId, String taskStatus) {
 		
-		MongoDatabase db = mongoClient.getDatabase(environment
-				.getProperty("mongo.dataBase"));
 
-		MongoCollection<BasicDBObject> coll = db.getCollection(
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
 				environment.getProperty("mongo.taskCollection"),
 				BasicDBObject.class);	
 		
-		MongoCollection<BasicDBObject> tagcoll = db.getCollection(
+		MongoCollection<BasicDBObject> tagcoll = taskdb.getCollection(
 				environment.getProperty("mongo.tagCollection"),
 				BasicDBObject.class);
 
@@ -239,14 +229,12 @@ public class DbOperationServiceImpl implements DbOperationService {
 
 	@Override
 	public JSONObject closeTask(String email, String taskId, String taskStatus) {
-		MongoDatabase db = mongoClient.getDatabase(environment
-				.getProperty("mongo.dataBase"));
-
-		MongoCollection<BasicDBObject> coll = db.getCollection(
+		
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
 				environment.getProperty("mongo.taskCollection"),
 				BasicDBObject.class);	
 		
-		MongoCollection<BasicDBObject> tagcoll = db.getCollection(
+		MongoCollection<BasicDBObject> tagcoll = taskdb.getCollection(
 				environment.getProperty("mongo.tagCollection"),
 				BasicDBObject.class);
 
@@ -309,10 +297,8 @@ public class DbOperationServiceImpl implements DbOperationService {
 
 	@Override
 	public void createUserTaskMap(TaskModel taskModel) {
-		MongoDatabase db = mongoClient.getDatabase(environment
-				.getProperty("mongo.dataBase"));
 
-		MongoCollection<BasicDBObject> coll = db.getCollection(
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
 				environment.getProperty("mongo.userTaskCollection"),
 				BasicDBObject.class);			
 
@@ -355,10 +341,48 @@ public class DbOperationServiceImpl implements DbOperationService {
 
 	@Override
 	public JSONObject getNewTasks(String email, String status) {
-		MongoDatabase db = mongoClient.getDatabase(environment
-				.getProperty("mongo.dataBase"));
 
-		MongoCollection<BasicDBObject> coll = db.getCollection(
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
+				environment.getProperty("mongo.taskCollection"),
+				BasicDBObject.class);	
+		
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd 00:00:00");
+		Date now = new Date();
+		//String currentDate = simpleDateFormat.format(now);
+		Date tomDate = DateUtils.addDays(now, 1);
+		String tomoDate = simpleDateFormat.format(tomDate);
+
+		BasicDBObject whereQuery = new BasicDBObject();
+		whereQuery.put("assigneeList.assignee", email);
+		whereQuery.put("taskStatus", Constants.TASK_STATUS_OPEN);
+		whereQuery.put("endDate", new BasicDBObject("$lte", tomoDate));
+		//whereQuery.put("endDate", new BasicDBObject("$gte", currentDate).append("$lte", tomoDate));
+		
+		FindIterable<BasicDBObject> taskobj = coll.find(whereQuery);
+		
+		List<TaskModel> tasklist = new ArrayList<TaskModel>();
+		JSONObject statusobj = new JSONObject();
+
+		if(taskobj.first() != null){
+			for(BasicDBObject newTaskObj : taskobj){
+				TaskModel taskModel = (TaskModel) (new Gson()).fromJson(newTaskObj.toString(),
+						TaskModel.class);
+				tasklist.add(taskModel);
+			}
+		}
+		
+		logger.info("taskList :: "+tasklist);
+		
+		statusobj.put("status", HttpStatus.OK.value());
+		statusobj.put("tasklist", tasklist);
+		return statusobj;
+	}
+
+	@Override
+	public JSONObject getTodayTasks(String email, String status) {
+
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
 				environment.getProperty("mongo.taskCollection"),
 				BasicDBObject.class);	
 		
@@ -372,7 +396,7 @@ public class DbOperationServiceImpl implements DbOperationService {
 		BasicDBObject whereQuery = new BasicDBObject();
 		whereQuery.put("assigneeList.assignee", email);
 		whereQuery.put("taskStatus", Constants.TASK_STATUS_OPEN);
-		whereQuery.put("endDate", new BasicDBObject("$gte", currentDate).append("$lte", tomoDate));
+		whereQuery.put("endDate", new BasicDBObject("$gte", currentDate).append("$lt", tomoDate));
 		
 		FindIterable<BasicDBObject> taskobj = coll.find(whereQuery);
 		
@@ -380,8 +404,77 @@ public class DbOperationServiceImpl implements DbOperationService {
 		JSONObject statusobj = new JSONObject();
 
 		if(taskobj.first() != null){
-			for(BasicDBObject newTaskObj : taskobj){
-				TaskModel taskModel = (TaskModel) (new Gson()).fromJson(newTaskObj.toString(),
+			for(BasicDBObject todayTaskObj : taskobj){
+				TaskModel taskModel = (TaskModel) (new Gson()).fromJson(todayTaskObj.toString(),
+						TaskModel.class);
+				tasklist.add(taskModel);
+			}
+		}
+		
+		logger.info("taskList :: "+tasklist);
+		
+		statusobj.put("status", HttpStatus.OK.value());
+		statusobj.put("tasklist", tasklist);
+		return statusobj;
+	}
+
+	@Override
+	public JSONObject getOverdueTasks(String email, String status) {
+
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
+				environment.getProperty("mongo.taskCollection"),
+				BasicDBObject.class);	
+		
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
+				"yyyy-MM-dd kk:mm:ss");
+		Date now = new Date();
+		String currentDate = simpleDateFormat.format(now);
+		//Date tomDate = DateUtils.addDays(now, 1);
+		//String tomoDate = simpleDateFormat.format(tomDate);
+
+		BasicDBObject whereQuery = new BasicDBObject();
+		whereQuery.put("assigneeList.assignee", email);
+		whereQuery.put("taskStatus", Constants.TASK_STATUS_OPEN);
+		whereQuery.put("endDate", new BasicDBObject("$gte", currentDate));
+		
+		FindIterable<BasicDBObject> taskobj = coll.find(whereQuery);
+		
+		List<TaskModel> tasklist = new ArrayList<TaskModel>();
+		JSONObject statusobj = new JSONObject();
+
+		if(taskobj.first() != null){
+			for(BasicDBObject overdueTaskObj : taskobj){
+				TaskModel taskModel = (TaskModel) (new Gson()).fromJson(overdueTaskObj.toString(),
+						TaskModel.class);
+				tasklist.add(taskModel);
+			}
+		}
+		
+		logger.info("taskList :: "+tasklist);
+		
+		statusobj.put("status", HttpStatus.OK.value());
+		statusobj.put("tasklist", tasklist);
+		return statusobj;
+	}
+
+	@Override
+	public JSONObject getClosedTasks(String email, String status) {
+		MongoCollection<BasicDBObject> coll = taskdb.getCollection(
+				environment.getProperty("mongo.taskCollection"),
+				BasicDBObject.class);	
+
+		BasicDBObject whereQuery = new BasicDBObject();
+		whereQuery.put("assigneeList.assignee", email);
+		whereQuery.put("taskStatus", Constants.TASK_STATUS_CLOSED);
+		
+		FindIterable<BasicDBObject> taskobj = coll.find(whereQuery);
+		
+		List<TaskModel> tasklist = new ArrayList<TaskModel>();
+		JSONObject statusobj = new JSONObject();
+
+		if(taskobj.first() != null){
+			for(BasicDBObject closedTaskObj : taskobj){
+				TaskModel taskModel = (TaskModel) (new Gson()).fromJson(closedTaskObj.toString(),
 						TaskModel.class);
 				tasklist.add(taskModel);
 			}

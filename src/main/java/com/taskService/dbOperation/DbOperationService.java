@@ -25,5 +25,11 @@ public interface DbOperationService {
 	public void createUserTaskMap(TaskModel taskModel);
 
 	public JSONObject getNewTasks(String email, String status);
+
+	public JSONObject getTodayTasks(String email, String status);
+
+	public JSONObject getOverdueTasks(String email, String status);
+
+	public JSONObject getClosedTasks(String email, String status);
 	
 }

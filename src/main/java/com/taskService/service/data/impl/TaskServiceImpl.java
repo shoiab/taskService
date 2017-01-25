@@ -295,13 +295,15 @@ public class TaskServiceImpl implements TaskService {
 			break;
 		
 		case Constants.TASK_STATUS_TODAY:
-			//taskobj = dbservice.getTodayTasks(email,status);
+			taskobj = dbservice.getTodayTasks(email,status);
 			break;
 			
 		case Constants.TASK_STATUS_OVERDUE:
+			taskobj = dbservice.getOverdueTasks(email, status);
 			break;
 			
 		case Constants.TASK_STATUS_CLOSED:
+			taskobj = dbservice.getClosedTasks(email, status);
 			break;
 
 		default:
