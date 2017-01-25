@@ -166,15 +166,19 @@ public class SearchManagerImpl implements SearchHandler {
 		taskModel.setTaskCreationDate(org.apache.solr.common.util.DateUtil.
                 getThreadLocalDateFormat().format(now));
 		
-		String taskEndDate = taskModel.getEndDate();
-		Date endDate = simpleDateFormat.parse(taskEndDate);
-		taskModel.setEndDate(org.apache.solr.common.util.DateUtil.
-                getThreadLocalDateFormat().format(endDate));
+		if(!taskModel.getEndDate().isEmpty()){
+			String taskEndDate = taskModel.getEndDate();
+			Date endDate = simpleDateFormat.parse(taskEndDate);
+			taskModel.setEndDate(org.apache.solr.common.util.DateUtil.
+	                getThreadLocalDateFormat().format(endDate));
+		}
 		
-		String taskNotificationTime = taskModel.getNotificationTime();
-		Date notificationTime = simpleDateFormat.parse(taskNotificationTime);
-		taskModel.setNotificationTime(org.apache.solr.common.util.DateUtil.
-                getThreadLocalDateFormat().format(notificationTime));
+		if(!taskModel.getNotificationTime().isEmpty()){
+			String taskNotificationTime = taskModel.getNotificationTime();
+			Date notificationTime = simpleDateFormat.parse(taskNotificationTime);
+			taskModel.setNotificationTime(org.apache.solr.common.util.DateUtil.
+	                getThreadLocalDateFormat().format(notificationTime));
+		}
 		
 		SolrInputDocument tagdoc = new SolrInputDocument();
 		
@@ -420,7 +424,7 @@ public class SearchManagerImpl implements SearchHandler {
 				
 		todayTaskSolrQuery
 		.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
-				+ "assignees:(" + "*"+email+"*" + ") AND " + "taskStatus:(" + Constants.TASK_STATUS_OPEN + ") AND " + "taskCreationDate:[" + fromDate  + " TO " +  toDate + "]");
+				+ "assignees:(" + "*"+email+"*" + ") AND " + "taskStatus:(" + Constants.TASK_STATUS_OPEN + ") AND " + "endDate:[" + fromDate  + " TO " +  toDate + "]");
 		
 		QueryResponse rsp = server.query(todayTaskSolrQuery, METHOD.GET);
 		logger.info("query = " + todayTaskSolrQuery.toString());
@@ -453,7 +457,7 @@ public class SearchManagerImpl implements SearchHandler {
 		
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
 				"yyyy-MM-dd kk:mm:ss");
-		String currentDate = simpleDateFormat.format(new Date());
+		String currentDate = simpleDateFormat.format(DateUtils.addDays(new Date(), 1));
 		Date now = simpleDateFormat.parse(currentDate);
 		
 		String toDate = org.apache.solr.common.util.DateUtil.
@@ -461,7 +465,7 @@ public class SearchManagerImpl implements SearchHandler {
 		
 		openTaskSolrQuery
 		.setQuery("tagType:(" + Constants.TAG_TYPE_TASK + ") AND "
-				+ "assignees:(" + "*"+email+ "*" + ") AND " + "taskStatus:(" + Constants.TASK_STATUS_OPEN + ") AND " + "endDate:[*" + " TO " + toDate + "]");
+				+ "assignees:(" + "*"+email+ "*" + ") AND " + "taskStatus:(" + Constants.TASK_STATUS_OPEN + ")");
 		
 		QueryResponse rsp = server.query(openTaskSolrQuery, METHOD.GET);
 		logger.info("query = " + openTaskSolrQuery.toString());
