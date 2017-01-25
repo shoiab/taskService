@@ -163,9 +163,18 @@ public class SearchManagerImpl implements SearchHandler {
 
 		String taskCreationDate = taskModel.getTaskCreationDate();
 		Date now = simpleDateFormat.parse(taskCreationDate);
-		String today = org.apache.solr.common.util.DateUtil.
-                getThreadLocalDateFormat().format(now);
-		taskModel.setTaskCreationDate(today);
+		taskModel.setTaskCreationDate(org.apache.solr.common.util.DateUtil.
+                getThreadLocalDateFormat().format(now));
+		
+		String taskEndDate = taskModel.getEndDate();
+		Date endDate = simpleDateFormat.parse(taskEndDate);
+		taskModel.setEndDate(org.apache.solr.common.util.DateUtil.
+                getThreadLocalDateFormat().format(endDate));
+		
+		String taskNotificationTime = taskModel.getNotificationTime();
+		Date notificationTime = simpleDateFormat.parse(taskNotificationTime);
+		taskModel.setNotificationTime(org.apache.solr.common.util.DateUtil.
+                getThreadLocalDateFormat().format(notificationTime));
 		
 		SolrInputDocument tagdoc = new SolrInputDocument();
 		
@@ -176,7 +185,7 @@ public class SearchManagerImpl implements SearchHandler {
 		tagdoc.addField(Constants.TAG_TYPE_ID, taskModel.getTaskId());
 		tagdoc.addField("taskAssigner", taskModel.getTaskAssigner());
 		tagdoc.addField("taskCreationDate", taskModel.getTaskCreationDate());
-		tagdoc.addField("startDate", taskModel.getStartDate());
+		//tagdoc.addField("startDate", taskModel.getStartDate());
 		tagdoc.addField("endDate", taskModel.getEndDate());
 		tagdoc.addField("taskStatus", taskModel.getTaskStatus());
 		tagdoc.addField("priority", taskModel.getPriority());

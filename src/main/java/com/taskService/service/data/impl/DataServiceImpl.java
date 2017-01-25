@@ -37,8 +37,7 @@ public class DataServiceImpl implements DataService {
 
 	@Override
 	public String getUserEmail(String auth_key) {
-		String email = template.opsForHash().entries(auth_key).get(Constants.EMP_EMAIL).toString();
-		return email;
+		return template.opsForHash().entries(auth_key).get(Constants.EMP_EMAIL).toString();
 	}
 
 	@Override
